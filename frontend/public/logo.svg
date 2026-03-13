@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="120" rx="16" fill="#0F172A" />
+  <circle cx="60" cy="45" r="25" stroke="#38BDF8" stroke-width="6" fill="none" />
+  <path d="M30 85H90" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" />
+  <path d="M45 70H75" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" />
+  <text x="60" y="110" text-anchor="middle" font-family="Arial" font-size="18" fill="#F8FAFC">EV</text>
+</svg>

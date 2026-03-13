@@ -1,0 +1,17 @@
+# Node
+node_modules/
+yarn.lock
+pnpm-lock.yaml
+
+# Python
+__pycache__/
+*.pyc
+.env
+.venv/
+
+# Build
+frontend/dist/
+backend/.pytest_cache/
+.idea/
+.vscode/
+.DS_Store
