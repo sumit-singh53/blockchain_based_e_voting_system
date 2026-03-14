@@ -16,8 +16,11 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  const login = ({ access_token, role }) => {
+  const login = ({ access_token, refresh_token, role }) => {
     localStorage.setItem("token", access_token);
+    if (refresh_token) {
+      localStorage.setItem("refresh_token", refresh_token);
+    }
     try {
       const decoded = jwtDecode(access_token);
       setUser({ voter_id: decoded.sub, role });
@@ -29,23 +32,16 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
     setToken(null);
     setUser(null);
   };
 
-  // Expire stale tokens on mount
-  useEffect(() => {
-    if (!token) return;
-    try {
-      const { exp } = jwtDecode(token);
-      if (exp && Date.now() / 1000 > exp) logout();
-    } catch {
-      logout();
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // We don't expire tokens instantly on mount anymore, we let the axios interceptor
+  // handle the 401 Unauthorized via the refresh token.
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: Boolean(token) }}>
+    <AuthContext.Provider value={{ user, token, setToken, login, logout, isAuthenticated: Boolean(token) }}>
       {children}
     </AuthContext.Provider>
   );

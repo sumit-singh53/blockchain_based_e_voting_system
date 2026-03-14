@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from fastapi import HTTPException, status
-from mysql.connector import IntegrityError
+from ..core.database import IntegrityError
 
 from ..core.chain_instance import Transaction, get_chain, persist_chain
 from ..core.database import get_connection
@@ -18,9 +18,24 @@ class VotingService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Election is not active")
 
         now = datetime.utcnow()
-        if election.get("start_date") and now < election["start_date"]:
+
+        def _parse_dt(val):
+            """Parse an ISO string from SQLite into a datetime, or return None."""
+            if val is None:
+                return None
+            if isinstance(val, datetime):
+                return val
+            try:
+                return datetime.fromisoformat(str(val))
+            except ValueError:
+                return None
+
+        start_dt = _parse_dt(election.get("start_date"))
+        end_dt   = _parse_dt(election.get("end_date"))
+
+        if start_dt and now < start_dt:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Election has not started yet")
-        if election.get("end_date") and now > election["end_date"]:
+        if end_dt and now > end_dt:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Election has ended")
 
         if not self._candidate_in_election(payload.candidate_id, payload.election_id):
@@ -29,22 +44,37 @@ class VotingService:
         if self._has_voted(voter_id, payload.election_id):
             raise HTTPException(status.HTTP_409_CONFLICT, detail="You have already voted in this election")
 
-        # Record vote on blockchain (voter identity anonymised)
-        tx = Transaction(
-            voter_id=f"anon_{voter_id[:8]}",
-            candidate_id=payload.candidate_id,
-            election_id=payload.election_id,
-            signature=str(uuid4()),
-        )
-        chain = get_chain()
-        chain.add_transaction(tx)
-        block = chain.mine_pending_transactions()
-        tx_hash = block.hash if block else None
-        persist_chain()
-
-        # Persist vote record and mark voter
         vote_id = str(uuid4())
         created_at = datetime.utcnow()
+
+        from blockchain.utils.keys import Wallet
+        # For scaffolding purposes: generate a one-off wallet for the anonymous voter
+        wallet = Wallet()
+        voter_public_key = wallet.public_key
+        
+        tx = Transaction(
+            vote_id=vote_id,
+            voter_id=voter_public_key,  # Now strictly a public key
+            candidate_id=payload.candidate_id,
+            election_id=payload.election_id,
+            signature="", 
+        )
+        
+        # Sign the transaction
+        tx.signature = wallet.sign_transaction(tx.to_signable_dict())
+
+        chain = get_chain()
+        
+        # Validate signature before adding to mempool
+        if not tx.is_valid(voter_public_key):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Transaction signature invalid")
+            
+        chain.add_transaction(tx)
+        # We NO LONGER mine the block instantly. We persist the mempool state.
+        persist_chain()
+        tx_hash = None
+
+        # Persist vote record and mark voter
         try:
             with get_connection() as conn:
                 cursor = conn.cursor()
@@ -53,7 +83,9 @@ class VotingService:
                     "VALUES (%s, %s, %s, %s, %s, %s)",
                     (vote_id, payload.election_id, voter_id, payload.candidate_id, tx_hash, created_at),
                 )
-                cursor.execute("UPDATE voters SET has_voted = 1 WHERE voter_id = %s", (voter_id,))
+                # NOTE: We do NOT set has_voted=1 globally here.
+                # The UNIQUE (voter_id, election_id) constraint properly enforces
+                # one-vote-per-election. A voter may participate in multiple elections.
                 conn.commit()
                 cursor.close()
         except IntegrityError as exc:

@@ -10,7 +10,7 @@ controller = VoterController()
 audit_service = AuditService()
 
 
-@router.get("/", response_model=list[VoterResponse])
+@router.get("", response_model=list[VoterResponse])
 def list_voters(
     role: str | None = Query(default=None),
     has_voted: bool | None = Query(default=None),

@@ -10,7 +10,7 @@ service = ElectionService()
 audit_service = AuditService()
 
 
-@router.post("/", response_model=ElectionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ElectionResponse, status_code=status.HTTP_201_CREATED)
 def create_election(
     payload: ElectionCreate,
     current_user: dict = Depends(require_roles("admin")),
@@ -27,7 +27,7 @@ def create_election(
     return election
 
 
-@router.get("/", response_model=list[ElectionResponse])
+@router.get("", response_model=list[ElectionResponse])
 def list_elections(status: str | None = Query(default=None)) -> list[ElectionResponse]:
     return service.list_elections(status)
 

@@ -21,7 +21,7 @@ from .api import (
 )
 from .core.config import settings
 
-app = FastAPI(title=settings.app_name)
+app = FastAPI(title=settings.app_name, redirect_slashes=False)
 
 app.add_middleware(
     CORSMiddleware,

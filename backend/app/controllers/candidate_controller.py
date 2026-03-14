@@ -8,8 +8,8 @@ class CandidateController:
     def __init__(self, service: CandidateService | None = None) -> None:
         self.service = service or CandidateService()
 
-    def list_candidates(self, election_id: str | None):
-        return self.service.list_candidates(election_id)
+    def list_candidates(self, election_id: str | None, limit: int, offset: int):
+        return self.service.list_candidates(election_id, limit, offset)
 
     def get_candidate(self, candidate_id: str):
         return self.service.get_candidate(candidate_id)

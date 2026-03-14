@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
 
 from fastapi import HTTPException, status
-from mysql.connector import IntegrityError
+from ..core.database import IntegrityError
 
 from ..core.database import get_connection
 from ..schemas.voter_schema import RoleLiteral, VoterAdminUpdate, VoterProfileUpdate, VoterResponse

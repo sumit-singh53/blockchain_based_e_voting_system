@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api"
     secret_key: str = "changeme"
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60
+    access_token_expire_minutes: int = 15
     mysql_host: str = "localhost"
     mysql_port: int = 3306
     mysql_user: str = "root"

@@ -28,12 +28,12 @@ const Results = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Election Results</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Election Results</h1>
 
       <select
         value={electionId}
         onChange={(e) => setElectionId(e.target.value)}
-        className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
+        className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 dark:focus:ring-sky-900/50 transition-colors"
       >
         <option value="">-- Select an election --</option>
         {elections.map((el) => (
@@ -41,35 +41,35 @@ const Results = () => {
         ))}
       </select>
 
-      {loading && <p className="text-slate-400">Loading results…</p>}
-      {error && <p className="text-red-500">{error}</p>}
+      {loading && <p className="text-slate-400 dark:text-slate-500">Loading results…</p>}
+      {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
 
       {results && (
         <div className="space-y-4">
           <div className="flex flex-wrap gap-4 text-sm">
-            <span className="bg-slate-100 px-3 py-1 rounded-full">
-              <strong>{results.total_votes}</strong> votes cast
+            <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-full">
+              <strong className="text-slate-900 dark:text-white">{results.total_votes}</strong> votes cast
             </span>
-            <span className="bg-slate-100 px-3 py-1 rounded-full">
-              <strong>{results.turnout_percentage}%</strong> turnout
+            <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-full">
+              <strong className="text-slate-900 dark:text-white">{results.turnout_percentage}%</strong> turnout
             </span>
-            <span className="bg-slate-100 px-3 py-1 rounded-full">
-              <strong>{results.total_voters}</strong> registered voters
+            <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-full">
+              <strong className="text-slate-900 dark:text-white">{results.total_voters}</strong> registered voters
             </span>
           </div>
 
           <div className="space-y-3">
             {results.results.map((r, i) => (
-              <div key={r.candidate_id} className="bg-white border border-slate-100 rounded-xl p-4 space-y-2">
+              <div key={r.candidate_id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-4 space-y-2 transition-colors">
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="text-sm font-semibold text-slate-500 mr-2">#{i + 1}</span>
-                    <span className="font-semibold text-slate-900">{r.candidate_name}</span>
-                    {r.party && <span className="ml-2 text-sm text-slate-400">{r.party}</span>}
+                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 mr-2">#{i + 1}</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{r.candidate_name}</span>
+                    {r.party && <span className="ml-2 text-sm text-slate-400 dark:text-slate-500">{r.party}</span>}
                   </div>
-                  <span className="text-sm font-medium text-slate-700">{r.votes} votes ({r.percentage}%)</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{r.votes} votes ({r.percentage}%)</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div
                     className="bg-sky-500 h-2 rounded-full transition-all"
                     style={{ width: `${r.percentage}%` }}

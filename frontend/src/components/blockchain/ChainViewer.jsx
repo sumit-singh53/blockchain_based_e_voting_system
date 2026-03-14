@@ -8,7 +8,7 @@ const ChainViewer = ({ chain = [] }) => {
         <BlockCard key={block.hash || block.index} block={block} />
       ))}
       {chain.length === 0 && (
-        <p className="text-sm text-slate-500">No blockchain data available yet.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">No blockchain data available yet.</p>
       )}
     </section>
   );

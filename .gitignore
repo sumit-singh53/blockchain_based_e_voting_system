@@ -15,3 +15,14 @@ backend/.pytest_cache/
 .idea/
 .vscode/
 .DS_Store
+.aider*
+
+# Backend specific
+backend/venv/
+venv/
+*.db
+*.db-*
+*.log
+chain.json
+mempool.json
+frontend/dist/

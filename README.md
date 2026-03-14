@@ -20,7 +20,6 @@ This project is organized to support the complete voting lifecycle:
 | `frontend/` | React + Vite + Tailwind application for voter, admin, and public-facing interfaces |
 | `backend/` | FastAPI application exposing authentication, voter, election, candidate, vote, admin, and blockchain APIs |
 | `blockchain/` | Python blockchain primitives, proof-of-work logic, transaction models, and storage helpers |
-| `infrastructure/` | Docker build assets for local deployment |
 | `docs/` | Supporting documentation for repository structure and future architecture notes |
 | `scripts/` | Automation helpers reserved for future setup and maintenance tasks |
 | `tests/` | Placeholder for unit, integration, and end-to-end tests |
@@ -30,7 +29,6 @@ This project is organized to support the complete voting lifecycle:
 - **Frontend stack:** React 18, Vite, Tailwind CSS, React Router, Axios
 - **Backend stack:** FastAPI, Pydantic v2, PyJWT, bcrypt, MySQL connector
 - **Blockchain layer:** block, transaction, proof-of-work, hashing, and storage abstractions
-- **DevOps readiness:** Docker Compose setup for frontend and backend services
 
 ## Repository explanation
 
@@ -59,11 +57,9 @@ blockchain_based_e_voting_system/
 ├── blockchain/             # Custom blockchain implementation
 ├── docs/                   # Repository documentation
 ├── frontend/               # React client application
-├── infrastructure/         # Docker and deployment assets
 ├── scripts/                # Helper scripts
 ├── tests/                  # Automated tests (planned/partial)
 ├── .env.example            # Example environment variables
-├── docker-compose.yml      # Local multi-service orchestration
 ├── project status.md       # Delivery snapshot and roadmap
 └── README.md               # Main project overview
 ```
@@ -106,10 +102,7 @@ Make sure MySQL is running and create a database named `blockchain-database` unl
 
 ### 4. Start the application
 
-You can run the system in either of these ways:
-
-- **Locally**: run the FastAPI backend and Vite frontend separately
-- **With Docker**: use `docker-compose.yml` to launch both services together
+Run the system locally by starting the FastAPI backend and Vite frontend separately.
 
 By default:
 - frontend runs on `http://localhost:5173`
@@ -122,8 +115,7 @@ The repository already includes:
 
 - frontend scaffolding for auth, admin, voter, and public routes,
 - backend route/controller/service layers for major voting features,
-- a custom blockchain package with core entities and mining logic,
-- containerization support for local development.
+- a custom blockchain package with core entities and mining logic.
 
 Areas that are still evolving include deeper API integration, automated tests, vote finalization flows, blockchain persistence, and production hardening.
 

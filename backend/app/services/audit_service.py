@@ -36,11 +36,12 @@ class AuditService:
                     entity_type,
                     entity_id,
                     payload,
-                    datetime.utcnow(),
+                    datetime.utcnow().isoformat(),
                 ),
             )
             conn.commit()
             cursor.close()
+
 
     def list_logs(
         self,
