@@ -3,12 +3,12 @@ from uuid import uuid4
 
 import bcrypt
 from fastapi import HTTPException, status
-from mysql.connector import IntegrityError
+from ..core.database import IntegrityError
 
 from ..core.config import settings
 from ..core.database import get_connection
-from ..core.security import create_access_token
-from ..schemas.auth_schema import LoginRequest, RegisterRequest
+from ..core.security import create_access_token, create_refresh_token
+from ..schemas.auth_schema import LoginRequest, RegisterRequest, RefreshRequest
 from .audit_service import AuditService
 
 
@@ -101,25 +101,41 @@ class AuthService:
         )
         return auth_payload
 
-    def refresh_access_token(self, current_user: dict) -> dict:
-        auth_payload = self._issue_access_token(
-            voter_id=current_user["voter_id"],
-            role=current_user.get("role", "voter"),
-        )
+    def refresh_access_token(self, payload: RefreshRequest) -> dict:
+        import jwt
+        try:
+            # Decode the refresh token bypassing short exp checks if necessary, but jwt.decode does it for us
+            decoded = jwt.decode(payload.refresh_token, settings.secret_key, algorithms=[settings.jwt_algorithm])
+            if decoded.get("type") != "refresh":
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
+            
+            voter_id = decoded.get("sub")
+            role = decoded.get("role", "voter")
+        except jwt.PyJWTError:
+            self.audit_service.record_event(
+                action="auth.refresh_failed",
+                entity_type="auth",
+                details={"reason": "invalid_refresh_token"},
+            )
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
+        auth_payload = self._issue_access_token(voter_id=voter_id, role=role)
         self.audit_service.record_event(
             action="auth.refresh",
             entity_type="auth",
-            actor_voter_id=current_user["voter_id"],
-            actor_role=current_user.get("role", "voter"),
-            entity_id=current_user["voter_id"],
+            actor_voter_id=voter_id,
+            actor_role=role,
+            entity_id=voter_id,
         )
         return auth_payload
 
     def _issue_access_token(self, *, voter_id: str, role: str) -> dict:
         expires_delta = timedelta(minutes=settings.access_token_expire_minutes)
-        token = create_access_token(subject=voter_id, role=role, expires_delta=expires_delta)
+        access_token = create_access_token(subject=voter_id, role=role, expires_delta=expires_delta)
+        refresh_token = create_refresh_token(subject=voter_id, role=role)
         return {
-            "access_token": token,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
             "token_type": "bearer",
             "role": role,
         }

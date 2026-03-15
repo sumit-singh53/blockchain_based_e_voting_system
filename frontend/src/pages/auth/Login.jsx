@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login as loginApi } from "../../services/authService";
 import useAuth from "../../hooks/useAuth";
+import { motion } from "framer-motion";
+import { ShieldCheck } from "lucide-react";
 
 const Login = () => {
   const { login } = useAuth();
@@ -36,60 +38,116 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-2xl shadow-sm w-full max-w-md space-y-4"
-      >
-        <h2 className="text-2xl font-semibold text-slate-900">Sign In</h2>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-1">
-          <label className="text-sm text-slate-600">Email</label>
-          <input
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            placeholder="you@example.com"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm text-slate-600">Password</label>
-          <input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            placeholder="••••••••"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-sky-600 hover:bg-sky-500 disabled:bg-sky-300 text-white py-2 rounded-lg font-semibold transition-colors"
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
+      {/* Left side: Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16">
+        <motion.div 
+           initial={{ opacity: 0, x: -20 }}
+           animate={{ opacity: 1, x: 0 }}
+           transition={{ duration: 0.5 }}
+           className="w-full max-w-md space-y-8"
         >
-          {loading ? "Signing in…" : "Sign In"}
-        </button>
+          <div>
+             <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display tracking-tight">Welcome back</h2>
+             <p className="mt-2 text-slate-600 dark:text-slate-400">Enter your credentials to access the voting portal.</p>
+          </div>
 
-        <p className="text-sm text-center text-slate-500">
-          Don&apos;t have an account?{" "}
-          <Link to="/register" className="text-sky-600 hover:underline">
-            Register
-          </Link>
-        </p>
-      </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <motion.div 
+                 initial={{ opacity: 0, height: 0 }}
+                 animate={{ opacity: 1, height: "auto" }}
+                 className="bg-red-50/80 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl backdrop-blur-sm"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email address</label>
+                <input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+               <div className="space-y-1.5">
+                 <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+                 </div>
+                 <input
+                   name="password"
+                   type="password"
+                   value={form.password}
+                   onChange={handleChange}
+                   required
+                   className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/50 transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                   placeholder="••••••••"
+                 />
+               </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 dark:focus:ring-white dark:focus:ring-offset-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {loading ? "Authenticating…" : "Sign in securely"}
+            </button>
+          </form>
+
+          <p className="text-sm text-center text-slate-600 dark:text-slate-400">
+            Don&apos;t have an account?{" "}
+            <Link to="/register" className="font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 transition-colors">
+              Request access
+            </Link>
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Right side: branding/imagery */}
+      <div className="hidden lg:flex w-1/2 flex-col justify-between bg-slate-100 dark:bg-[#0B0F19] text-slate-900 dark:text-white p-12 relative overflow-hidden transition-colors duration-300">
+         <div className="absolute inset-0 bg-gradient-to-bl from-indigo-200/40 dark:from-indigo-900/40 to-sky-200/40 dark:to-sky-900/40 mix-blend-overlay transition-colors" />
+         
+         <div className="relative z-10 flex flex-col items-end w-full">
+            <Link to="/" className="flex items-center gap-2 text-xl font-bold font-display tracking-tight text-slate-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+               <ShieldCheck className="w-6 h-6 text-sky-500 dark:text-sky-400" />
+               Blockchain eVoting
+            </Link>
+         </div>
+
+         <div className="relative z-10 max-w-md self-end text-right">
+            <motion.h2 
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.5 }}
+               className="text-4xl font-bold font-display leading-tight mb-4"
+            >
+               Cryptographic Identity Verification.
+            </motion.h2>
+            <motion.p 
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.5, delay: 0.1 }}
+               className="text-slate-600 dark:text-slate-400 leading-relaxed text-balance"
+            >
+               The authentication node verifies your credentials in milliseconds, issuing a 
+               cryptographically signed JSON Web Token (JWT). This token securely grants 
+               you access to the decentralized ledger without exposing your private data 
+               to the network.
+            </motion.p>
+         </div>
+
+         <div className="relative z-10 text-sm text-slate-500 dark:text-slate-500 text-right">
+            &copy; {new Date().getFullYear()} National eVoting Infrastructure
+         </div>
+      </div>
     </div>
   );
 };

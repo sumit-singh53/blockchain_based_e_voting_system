@@ -28,6 +28,18 @@ class BlockchainService:
         if block is None:
             return None
         persist_chain()
+        
+        # Update MySQL `votes` table with the new tx_hash for all mined transactions
+        from ..core.database import get_connection
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            for tx in block.transactions:
+                cursor.execute(
+                    "UPDATE votes SET tx_hash = %s WHERE vote_id = %s",
+                    (block.hash, getattr(tx, "vote_id", None))
+                )
+            conn.commit()
+            cursor.close()
         return {
             "index": block.index,
             "hash": block.hash,

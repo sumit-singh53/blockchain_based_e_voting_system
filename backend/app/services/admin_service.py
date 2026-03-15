@@ -14,7 +14,7 @@ class AdminService:
             cursor.execute("SELECT COUNT(*) FROM voters WHERE role = 'voter'")
             (total_voters,) = cursor.fetchone()
 
-            cursor.execute("SELECT COUNT(*) FROM voters WHERE has_voted = 1 AND role = 'voter'")
+            cursor.execute("SELECT COUNT(DISTINCT voter_id) FROM votes")
             (voters_who_voted,) = cursor.fetchone()
 
             cursor.execute("SELECT COUNT(*) FROM elections")
@@ -58,9 +58,6 @@ class AdminService:
             )
             rows = cursor.fetchall()
             cursor.close()
-        for row in rows:
-            if row.get("created_at"):
-                row["created_at"] = row["created_at"].isoformat()
         return rows
 
     def get_audit_logs(

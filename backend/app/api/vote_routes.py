@@ -2,19 +2,23 @@ from fastapi import APIRouter, Depends, status
 
 from ..controllers.vote_controller import VoteController
 from ..core.dependencies import get_current_user, require_roles
+from ..core.rate_limiter import limit_by_ip
 from ..schemas.vote_schema import ElectionResults, VoteCastRequest, VoteResponse
 from ..services.audit_service import AuditService
 
 router = APIRouter(prefix="/votes", tags=["Votes"])
 controller = VoteController()
 audit_service = AuditService()
+vote_rate_limit = limit_by_ip(max_requests=100, window_seconds=60)
 
 
 @router.post("/cast", response_model=VoteResponse, status_code=status.HTTP_201_CREATED)
 def cast_vote(
     payload: VoteCastRequest,
     current_user: dict = Depends(require_roles("voter")),
+    _rate_limit: None = Depends(vote_rate_limit),
 ) -> VoteResponse:
+    _ = _rate_limit
     vote = controller.cast_vote(current_user["voter_id"], payload)
     audit_service.record_event(
         action="vote.cast",

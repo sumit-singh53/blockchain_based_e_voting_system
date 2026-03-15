@@ -46,14 +46,21 @@ class Blockchain:
         return block
 
     def validate_chain(self) -> bool:
-        """Return True if every block's hash and linkage are valid."""
-        for i in range(1, len(self.chain)):
-            cur = self.chain[i]
-            prev = self.chain[i - 1]
+        """Return True if every block's hash, linkage, and signatures are valid."""
+        for i, cur in enumerate(self.chain):
+            if i > 0:
+                prev = self.chain[i - 1]
+                if cur.previous_hash != prev.hash:
+                    return False
+            
             if cur.hash != hash_block(cur):
                 return False
-            if cur.previous_hash != prev.hash:
-                return False
+                
+            for tx in cur.transactions:
+                # Based on the new design, voter_id stores the public key directly
+                if not tx.is_valid(tx.voter_id):
+                    return False
+                    
         return True
 
     def to_dict(self) -> list:

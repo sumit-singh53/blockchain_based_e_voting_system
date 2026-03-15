@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 from uuid import uuid4
 
 from fastapi import HTTPException, status
-from mysql.connector import IntegrityError
+from ..core.database import IntegrityError
 
 from ..core.database import get_connection
 from ..schemas.candidate_schema import CandidateCreate, CandidateResponse, CandidateUpdate
@@ -36,13 +36,14 @@ class CandidateService:
             description=payload.description,
         )
 
-    def list_candidates(self, election_id: str | None = None) -> List[CandidateResponse]:
+    def list_candidates(self, election_id: str | None = None, limit: int = 100, offset: int = 0) -> List[CandidateResponse]:
         query = "SELECT candidate_id, election_id, name, party, description FROM candidates"
-        params: tuple = ()
+        params: list = []
         if election_id:
             query += " WHERE election_id = %s"
-            params = (election_id,)
-        query += " ORDER BY name"
+            params.append(election_id)
+        query += " ORDER BY name LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
         with get_connection() as conn:
             cursor = conn.cursor(dictionary=True)
             cursor.execute(query, params)

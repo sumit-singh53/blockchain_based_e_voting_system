@@ -18,10 +18,10 @@ class ElectionService:
         status_value = payload.status
 
         insert_sql = (
-            "INSERT INTO elections (election_id, name, status, start_date, end_date) "
-            "VALUES (%s, %s, %s, %s, %s)"
+            "INSERT INTO elections (election_id, name, description, status, start_date, end_date) "
+            "VALUES (%s, %s, %s, %s, %s, %s)"
         )
-        values = (election_id, payload.name, status_value, start_date, end_date)
+        values = (election_id, payload.name, payload.description, status_value, start_date, end_date)
 
         with get_connection() as conn:
             cursor = conn.cursor()
@@ -32,13 +32,14 @@ class ElectionService:
         return ElectionResponse(
             election_id=election_id,
             name=payload.name,
+            description=payload.description,
             status=status_value,
             start_date=start_date,
             end_date=end_date,
         )
 
     def list_elections(self, status_filter: str | None = None) -> list[ElectionResponse]:
-        query = "SELECT election_id, name, status, start_date, end_date FROM elections"
+        query = "SELECT election_id, name, description, status, start_date, end_date FROM elections"
         params: tuple[Any, ...] = ()
         if status_filter:
             if status_filter not in VALID_STATUSES:
@@ -89,7 +90,7 @@ class ElectionService:
         return self.get_election(election_id)
 
     def _fetch_election(self, election_id: str) -> ElectionResponse | None:
-        query = "SELECT election_id, name, status, start_date, end_date FROM elections WHERE election_id = %s"
+        query = "SELECT election_id, name, description, status, start_date, end_date FROM elections WHERE election_id = %s"
         with get_connection() as conn:
             cursor = conn.cursor(dictionary=True)
             cursor.execute(query, (election_id,))
@@ -104,6 +105,7 @@ class ElectionService:
         return ElectionResponse(
             election_id=row["election_id"],
             name=row["name"],
+            description=row.get("description"),
             status=row["status"],
             start_date=row.get("start_date"),
             end_date=row.get("end_date"),

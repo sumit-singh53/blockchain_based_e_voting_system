@@ -10,12 +10,14 @@ controller = CandidateController()
 audit_service = AuditService()
 
 
-@router.get("/", response_model=list[CandidateResponse])
+@router.get("", response_model=list[CandidateResponse])
 def list_candidates(
     election_id: str | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
     _user: dict = Depends(get_current_user),
 ) -> list[CandidateResponse]:
-    return controller.list_candidates(election_id)
+    return controller.list_candidates(election_id, limit, offset)
 
 
 @router.get("/{candidate_id}", response_model=CandidateResponse)
@@ -26,7 +28,7 @@ def get_candidate(
     return controller.get_candidate(candidate_id)
 
 
-@router.post("/", response_model=CandidateResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CandidateResponse, status_code=status.HTTP_201_CREATED)
 def create_candidate(
     payload: CandidateCreate,
     current_user: dict = Depends(require_roles("admin")),

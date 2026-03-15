@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from fastapi import HTTPException, status
-from mysql.connector import IntegrityError
+from ..core.database import IntegrityError
 
 from ..core.chain_instance import Transaction, get_chain, persist_chain
 from ..core.database import get_connection
@@ -18,9 +18,24 @@ class VotingService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Election is not active")
 
         now = datetime.utcnow()
-        if election.get("start_date") and now < election["start_date"]:
+
+        def _parse_dt(val):
+            """Parse an ISO string from SQLite into a datetime, or return None."""
+            if val is None:
+                return None
+            if isinstance(val, datetime):
+                return val
+            try:
+                return datetime.fromisoformat(str(val))
+            except ValueError:
+                return None
+
+        start_dt = _parse_dt(election.get("start_date"))
+        end_dt   = _parse_dt(election.get("end_date"))
+
+        if start_dt and now < start_dt:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Election has not started yet")
-        if election.get("end_date") and now > election["end_date"]:
+        if end_dt and now > end_dt:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Election has ended")
 
         if not self._candidate_in_election(payload.candidate_id, payload.election_id):
@@ -29,42 +44,47 @@ class VotingService:
         if self._has_voted(voter_id, payload.election_id):
             raise HTTPException(status.HTTP_409_CONFLICT, detail="You have already voted in this election")
 
-        # Record vote on blockchain (voter identity anonymised)
+        # Now constructing the transaction using the client-provided values
         tx = Transaction(
-            voter_id=f"anon_{voter_id[:8]}",
+            vote_id=payload.vote_id,
+            voter_id=payload.voter_id,  # This must be the public key hex provided by frontend
             candidate_id=payload.candidate_id,
             election_id=payload.election_id,
-            signature=str(uuid4()),
+            signature=payload.signature,
+            timestamp=payload.timestamp
         )
+        
+        # Validate signature before adding to mempool
+        if not tx.is_valid(payload.voter_id):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Transaction signature is invalid")
+            
         chain = get_chain()
         chain.add_transaction(tx)
-        block = chain.mine_pending_transactions()
-        tx_hash = block.hash if block else None
+        
+        # Persist the mempool state
         persist_chain()
+        tx_hash = None
 
         # Persist vote record and mark voter
-        vote_id = str(uuid4())
-        created_at = datetime.utcnow()
         try:
             with get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     "INSERT INTO votes (vote_id, election_id, voter_id, candidate_id, tx_hash, created_at) "
                     "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (vote_id, payload.election_id, voter_id, payload.candidate_id, tx_hash, created_at),
+                    (payload.vote_id, payload.election_id, voter_id, payload.candidate_id, tx_hash, payload.timestamp),
                 )
-                cursor.execute("UPDATE voters SET has_voted = 1 WHERE voter_id = %s", (voter_id,))
                 conn.commit()
                 cursor.close()
         except IntegrityError as exc:
             raise HTTPException(status.HTTP_409_CONFLICT, detail="You have already voted in this election") from exc
 
         return VoteResponse(
-            vote_id=vote_id,
+            vote_id=payload.vote_id,
             election_id=payload.election_id,
             candidate_id=payload.candidate_id,
             tx_hash=tx_hash,
-            created_at=created_at,
+            created_at=datetime.fromisoformat(payload.timestamp),
         )
 
     def get_results(self, election_id: str) -> ElectionResults:
@@ -81,15 +101,17 @@ class VotingService:
             candidates = cursor.fetchall()
             cursor.close()
 
-        with get_connection() as conn:
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute(
-                "SELECT candidate_id, COUNT(*) AS vote_count FROM votes "
-                "WHERE election_id = %s GROUP BY candidate_id",
-                (election_id,),
-            )
-            tally = {row["candidate_id"]: row["vote_count"] for row in cursor.fetchall()}
-            cursor.close()
+        # Tally results directly from the blockchain for verifiable transparency
+        chain = get_chain()
+        if not chain.validate_chain():
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Blockchain data integrity check failed.")
+
+        tally = {c["candidate_id"]: 0 for c in candidates}
+        for block in chain.chain:
+            for tx in block.transactions:
+                if tx.election_id == election_id and tx.candidate_id in tally:
+                    # Depending on security logic, you might also `tx.is_valid()` again here.
+                    tally[tx.candidate_id] += 1
 
         with get_connection() as conn:
             cursor = conn.cursor()

@@ -20,6 +20,11 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
 
     voter_id = payload.get("sub")
     role = payload.get("role")
+    token_type = payload.get("type")
+    
+    if token_type != "access":
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
+        
     if voter_id is None or role is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
     return {"voter_id": voter_id, "role": role}

@@ -22,12 +22,12 @@ const Candidates = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Candidates</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Candidates</h1>
 
       <select
         value={electionId}
         onChange={(e) => setElectionId(e.target.value)}
-        className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
+        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/40 transition-colors"
       >
         <option value="">-- Select an election --</option>
         {elections.map((el) => (
@@ -35,18 +35,18 @@ const Candidates = () => {
         ))}
       </select>
 
-      {loading && <p className="text-slate-400 text-sm">Loading…</p>}
+      {loading && <p className="text-slate-500 dark:text-slate-400 text-sm">Loading…</p>}
 
       <div className="space-y-3">
         {candidates.map((c) => (
-          <div key={c.candidate_id} className="bg-white border border-slate-100 rounded-xl p-4 space-y-1">
-            <p className="font-semibold text-slate-900">{c.name}</p>
-            {c.party && <p className="text-sm text-slate-500">{c.party}</p>}
-            {c.description && <p className="text-sm text-slate-400 mt-1">{c.description}</p>}
+          <div key={c.candidate_id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-4 space-y-1 transition-colors shadow-sm dark:shadow-none">
+            <p className="font-semibold text-slate-900 dark:text-white">{c.name}</p>
+            {c.party && <p className="text-sm text-slate-500 dark:text-slate-400">{c.party}</p>}
+            {c.description && <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">{c.description}</p>}
           </div>
         ))}
         {!loading && electionId && candidates.length === 0 && (
-          <p className="text-slate-400 text-sm">No candidates found for this election.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">No candidates found for this election.</p>
         )}
       </div>
     </div>
